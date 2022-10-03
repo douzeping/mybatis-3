@@ -91,6 +91,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     this.parser = parser;
   }
 
+  // 归根结底，对配置文件进行各种解析，主要是对 Configuration 和 parser 相关的设置
   public Configuration parse() {
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
@@ -103,20 +104,33 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void parseConfiguration(XNode root) {
     try {
       // issue #117 read properties first
+      // parser 和 configuration 设置 properties
       propertiesElement(root.evalNode("properties"));
+      // setting properties
       Properties settings = settingsAsProperties(root.evalNode("settings"));
+      // TODO D VFS??
       loadCustomVfs(settings);
+      // TODO D Log??
       loadCustomLogImpl(settings);
       typeAliasesElement(root.evalNode("typeAliases"));
+      // 解析 <plugin /> 填充 plugin properties, 插入 interceptorChain 中
       pluginElement(root.evalNode("plugins"));
+      // TODO D 后续解析
       objectFactoryElement(root.evalNode("objectFactory"));
+      // TODO D 后续解析
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+      // TODO D 后续解析
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+      // 主要是从 <settings> 中获取配置，然后设置到 configuration 中
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
+      // 解析 environment 标签, environment id 对得上的话就设置到 configuration.setEnvironment 中
       environmentsElement(root.evalNode("environments"));
+      // TODO D 数据库连接看是哪一个厂商的DB (MySQL SQLServer PGSQL) configuration.setDatabaseId
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+      // 类型处理器 解析完塞到 typeHandlerRegistry
       typeHandlerElement(root.evalNode("typeHandlers"));
+      // mapper 解析, 详细得读一下 XMLMapperBuilder.parse 的代码
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -158,6 +172,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void typeAliasesElement(XNode parent) {
+    // TODO D 为什么 下面要分别使用两种不同的 typeAliasRegistry ?
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
         if ("package".equals(child.getName())) {
